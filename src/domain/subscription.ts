@@ -25,6 +25,9 @@ export function assertSubscription(input: NewSubscription): NewSubscription {
   if (!userId) throw new InvalidSubscription("userId is required");
   if (channel !== "email" && channel !== "sms") throw new InvalidSubscription("channel must be email or sms");
   if (!address) throw new InvalidSubscription("address is required");
+  if (channel === "email" && !address.includes("@")) {
+    throw new InvalidSubscription("email address must contain @");
+  }
   if (!topic) throw new InvalidSubscription("topic is required");
   return { userId, channel, address, topic };
 }
