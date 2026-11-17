@@ -2,8 +2,6 @@
 
 Stores a subscription and an outbox row in one transaction. A consumer of `orders.events` sends each `order.placed` once per matching subscription.
 
-Design notes: [BUILD.md](BUILD.md).
-
 ```sh
 createdb notifications_test
 cp .env.example .env
