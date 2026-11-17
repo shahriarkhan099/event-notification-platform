@@ -7,10 +7,10 @@ import { PrismaDeliveryLog } from "./infrastructure/prisma-delivery-log.js";
 import { PrismaSubscriptionStore } from "./infrastructure/prisma-subscription-store.js";
 import { redisClaimStore } from "./infrastructure/redis-claim.js";
 
-const { kafkaBrokers, redisUrl } = readConfig();
+const { kafkaBrokers, redisUrl, redisTtlSeconds } = readConfig();
 const subscriptions = new PrismaSubscriptionStore(prisma);
 const deliveries = new PrismaDeliveryLog(prisma);
-const claims = redisClaimStore(redisUrl);
+const claims = redisClaimStore(redisUrl, redisTtlSeconds);
 
 const consumer = await consumeOrders(kafkaBrokers, (event) =>
   deliverOrder(subscriptions, claims, deliveries, {

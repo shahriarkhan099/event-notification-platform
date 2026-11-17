@@ -2,6 +2,7 @@ export type AppConfig = {
   kafkaBrokers: string[];
   redisUrl: string;
   port: number;
+  redisTtlSeconds: number;
 };
 
 export function readConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -12,5 +13,9 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     .map((part) => part.trim())
     .filter(Boolean);
   const redisUrl = env.REDIS_URL ?? "redis://localhost:6379";
-  return { kafkaBrokers, redisUrl, port };
+  const redisTtlSeconds = Number(env.REDIS_TTL_SECONDS ?? 86400);
+  if (!Number.isInteger(redisTtlSeconds) || redisTtlSeconds < 1) {
+    throw new Error("REDIS_TTL_SECONDS must be a positive integer");
+  }
+  return { kafkaBrokers, redisUrl, port, redisTtlSeconds };
 }
