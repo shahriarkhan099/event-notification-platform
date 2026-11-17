@@ -7,7 +7,10 @@ import { createApp } from "./interfaces/http/app.js";
 
 const { port } = readConfig();
 const store = new PrismaSubscriptionStore(prisma);
-const server = createApp((input) => createSubscription(store, input)).listen(port, () => {
+const server = createApp(
+  (input) => createSubscription(store, input),
+  (topic) => store.findByTopic(topic),
+).listen(port, () => {
   console.log(`notifications listening on ${port}`);
 });
 

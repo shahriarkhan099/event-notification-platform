@@ -3,14 +3,32 @@ import type { NewSubscription, SavedSubscription } from "../../domain/subscripti
 import { InvalidSubscription } from "../../domain/subscription.js";
 
 type Create = (input: NewSubscription) => Promise<SavedSubscription>;
+type List = (topic: string) => Promise<SavedSubscription[]>;
 
-export function createApp(create: Create) {
+export function createApp(create: Create, list: List = async () => []) {
   const app = express();
   app.disable("x-powered-by");
   app.use(express.json({ limit: "16kb" }));
 
   app.get("/health", (_req, res) => {
     res.json({ ok: true });
+  });
+
+  app.get("/subscriptions", async (req, res, next) => {
+    try {
+      const topic = typeof req.query.topic === "string" ? req.query.topic : "";
+      const rows = await list(topic);
+      res.json(rows.map((subscription) => ({
+        id: subscription.id,
+        userId: subscription.userId,
+        channel: subscription.channel,
+        address: subscription.address,
+        topic: subscription.topic,
+        createdAt: subscription.createdAt.toISOString(),
+      })));
+    } catch (err) {
+      next(err);
+    }
   });
 
   app.post("/subscriptions", async (req, res, next) => {
