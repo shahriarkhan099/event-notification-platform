@@ -1,6 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import type { NewSubscription, SavedSubscription } from "../../domain/subscription.js";
 import { InvalidSubscription } from "../../domain/subscription.js";
+import { assignRequestId } from "./request-id.js";
 
 type Create = (input: NewSubscription) => Promise<SavedSubscription>;
 type List = (topic: string) => Promise<SavedSubscription[]>;
@@ -9,6 +10,7 @@ export function createApp(create: Create, list: List = async () => []) {
   const app = express();
   app.disable("x-powered-by");
   app.use(express.json({ limit: "16kb" }));
+  app.use(assignRequestId);
 
   app.get("/health", (_req, res) => {
     res.json({ ok: true });
