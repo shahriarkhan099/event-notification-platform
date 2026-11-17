@@ -5,6 +5,12 @@ import type { DeliveryLog } from "../application/ports.js";
 export class PrismaDeliveryLog implements DeliveryLog {
   constructor(private readonly db: PrismaClient) {}
 
+  async state(eventId: string, subscriptionId: string) {
+    const row = await this.db.delivery.findFirst({ where: { eventId, subscriptionId } });
+    if (!row) return "missing" as const;
+    return row.status === "sent" ? "sent" as const : "pending" as const;
+  }
+
   async claim(eventId: string, subscriptionId: string) {
     try {
       await this.db.delivery.create({

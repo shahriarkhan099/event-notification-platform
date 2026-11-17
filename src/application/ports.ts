@@ -27,7 +27,10 @@ export type ClaimStore = {
   release(key: string): Promise<void>;
 };
 
+export type DeliveryState = "missing" | "pending" | "sent";
+
 export type DeliveryLog = {
+  state(eventId: string, subscriptionId: string): Promise<DeliveryState>;
   claim(eventId: string, subscriptionId: string): Promise<boolean>;
   markSent(eventId: string, subscriptionId: string): Promise<void>;
   release(eventId: string, subscriptionId: string): Promise<void>;

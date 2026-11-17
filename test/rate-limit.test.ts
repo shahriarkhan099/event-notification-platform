@@ -16,7 +16,7 @@ test("a subscription past the limit is not sent", async () => {
   const sent = await deliverOrder(
     { async create() { return subscription; }, async findByTopic() { return [subscription]; } },
     { async claim() { return true; }, async release() {} },
-    { async claim() { return true; }, async markSent() {}, async release() {} },
+    { async state() { return "missing" as const; }, async claim() { return true; }, async markSent() {}, async release() {} },
     { async send() { sends += 1; } },
     { id: "evt_1", type: "order.placed", orderId: "ord_1", sku: "mug", qty: 1 },
     new MemoryRateLimit(0),

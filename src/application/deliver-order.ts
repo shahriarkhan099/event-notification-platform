@@ -14,6 +14,7 @@ export async function deliverOrder(
   const sent: string[] = [];
   for (const subscription of matching) {
     if (limit && !(await limit.take(subscription.id))) continue;
+    if ((await deliveries.state(event.id, subscription.id)) === "sent") continue;
     const key = `delivery:${event.id}:${subscription.id}`;
     const cached = await claims.claim(key);
     if (!cached) continue;
