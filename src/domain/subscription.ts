@@ -23,7 +23,7 @@ export function assertSubscription(input: NewSubscription): NewSubscription {
   const address = input.address.trim();
   const topic = input.topic.trim();
   if (!userId) throw new InvalidSubscription("userId is required");
-  if (!channel) throw new InvalidSubscription("channel is required");
+  if (channel !== "email" && channel !== "sms") throw new InvalidSubscription("channel must be email or sms");
   if (!address) throw new InvalidSubscription("address is required");
   if (!topic) throw new InvalidSubscription("topic is required");
   return { userId, channel, address, topic };
