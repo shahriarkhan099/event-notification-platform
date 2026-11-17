@@ -29,7 +29,10 @@ export async function consumeOrders(
     eachMessage: async ({ message }) => {
       if (!message.value) return;
       const event = parseOrderPlaced(message.value.toString("utf8"));
-      if (!event) return;
+      if (!event) {
+        console.log("skipped unreadable order event");
+        return;
+      }
       await onEvent(event);
     },
   });
