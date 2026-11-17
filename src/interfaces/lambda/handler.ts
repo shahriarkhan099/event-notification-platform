@@ -1,4 +1,5 @@
 import { parseOrderPlaced } from "../../domain/order-event.js";
+import { partialBatchFailure } from "./failures.js";
 
 export type SqsRecord = {
   messageId: string;
@@ -9,14 +10,14 @@ export type SqsRecord = {
 export type SqsEvent = { Records?: SqsRecord[] };
 
 export async function handleDelivery(event: SqsEvent, deliver: (body: string) => Promise<void>) {
-  const batchItemFailures: { itemIdentifier: string }[] = [];
+  const failed: string[] = [];
   for (const record of event.Records ?? []) {
     if (!parseOrderPlaced(record.body)) continue;
     try {
       await deliver(record.body);
     } catch {
-      batchItemFailures.push({ itemIdentifier: record.messageId });
+      failed.push(record.messageId);
     }
   }
-  return { batchItemFailures };
+  return partialBatchFailure(failed);
 }
