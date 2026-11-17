@@ -158,6 +158,24 @@ test("junk payloads are ignored and a real order event parses", () => {
   assert.equal(event?.orderId, "ord_1");
 });
 
+test("the same user, channel, address, and topic returns the original subscription", async () => {
+  const first = await createSubscription(store, {
+    userId: "u1",
+    channel: "email",
+    address: "a@b.co",
+    topic: "order.placed",
+  });
+  const second = await createSubscription(store, {
+    userId: "u1",
+    channel: "email",
+    address: "a@b.co",
+    topic: "order.placed",
+  });
+  assert.equal(second.id, first.id);
+  assert.equal(await prisma.subscription.count(), 1);
+  assert.equal(await prisma.outbox.count(), 1);
+});
+
 test("POST /subscriptions rejects an empty address", async () => {
   const app = createApp((input) => createSubscription(store, input));
   const server = app.listen(0);
