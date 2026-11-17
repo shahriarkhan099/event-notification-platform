@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Subscription {
+  id        String   @id
+  userId    String   @map("user_id")
+  channel   String
+  address   String
+  topic     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("subscriptions")
+}
+
+model Outbox {
+  id          BigInt    @id @default(autoincrement())
+  aggregateId String    @map("aggregate_id")
+  type        String
+  payload     Json
+  createdAt   DateTime  @default(now()) @map("created_at")
+  publishedAt DateTime? @map("published_at")
+
+  @@index([publishedAt, id])
+  @@map("outbox")
+}
+
+model Delivery {
+  id             String    @id
+  eventId        String    @map("event_id")
+  subscriptionId String    @map("subscription_id")
+  status         String
+  createdAt      DateTime  @default(now()) @map("created_at")
+  sentAt         DateTime? @map("sent_at")
+
+  @@unique([eventId, subscriptionId])
+  @@map("deliveries")
+}
