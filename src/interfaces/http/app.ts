@@ -6,14 +6,17 @@ import { assignRequestId } from "./request-id.js";
 type Create = (input: NewSubscription) => Promise<SavedSubscription>;
 type List = (topic: string) => Promise<SavedSubscription[]>;
 
-export function createApp(create: Create, list: List = async () => []) {
+type Health = () => Promise<boolean>;
+
+export function createApp(create: Create, list: List = async () => [], health: Health = async () => true) {
   const app = express();
   app.disable("x-powered-by");
   app.use(express.json({ limit: "16kb" }));
   app.use(assignRequestId);
 
-  app.get("/health", (_req, res) => {
-    res.json({ ok: true });
+  app.get("/health", async (_req, res) => {
+    const ok = await health();
+    res.status(ok ? 200 : 503).json({ ok });
   });
 
   app.get("/subscriptions", async (req, res, next) => {

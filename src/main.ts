@@ -10,6 +10,10 @@ const store = new PrismaSubscriptionStore(prisma);
 const server = createApp(
   (input) => createSubscription(store, input),
   (topic) => store.findByTopic(topic),
+  async () => {
+    await prisma.$queryRaw`SELECT 1`;
+    return true;
+  },
 ).listen(port, () => {
   console.log(`notifications listening on ${port}`);
 });
