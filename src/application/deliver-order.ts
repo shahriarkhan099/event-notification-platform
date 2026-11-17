@@ -12,9 +12,16 @@ export async function deliverOrder(
 ) {
   const matching = await subscriptions.findByTopic("order.placed");
   const sent: string[] = [];
+  const skipped: string[] = [];
   for (const subscription of matching) {
-    if (limit && !(await limit.take(subscription.id))) continue;
-    if ((await deliveries.state(event.id, subscription.id)) === "sent") continue;
+    if (limit && !(await limit.take(subscription.id))) {
+      skipped.push(subscription.id);
+      continue;
+    }
+    if ((await deliveries.state(event.id, subscription.id)) === "sent") {
+      skipped.push(subscription.id);
+      continue;
+    }
     const key = `delivery:${event.id}:${subscription.id}`;
     const cached = await claims.claim(key);
     if (!cached) continue;
@@ -30,5 +37,5 @@ export async function deliverOrder(
       throw err;
     }
   }
-  return sent;
+  return { sent, skipped };
 }

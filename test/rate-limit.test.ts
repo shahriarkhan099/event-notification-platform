@@ -21,6 +21,6 @@ test("a subscription past the limit is not sent", async () => {
     { id: "evt_1", type: "order.placed", orderId: "ord_1", sku: "mug", qty: 1 },
     new MemoryRateLimit(0),
   );
-  assert.deepEqual(sent, []);
+  assert.deepEqual(sent, { sent: [], skipped: ["sub_1"] });
   assert.equal(sends, 0);
 });

@@ -24,6 +24,6 @@ test("an already sent delivery is skipped", async () => {
     { async send() { throw new Error("should not send"); } },
     { id: "evt_1", type: "order.placed", orderId: "ord_1", sku: "mug", qty: 1 },
   );
-  assert.deepEqual(sent, []);
+  assert.deepEqual(sent.skipped, ["sub_1"]);
   assert.equal(claims, 0);
 });

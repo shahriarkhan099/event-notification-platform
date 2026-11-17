@@ -114,8 +114,8 @@ test("one event is sent once per subscription, including a retry", async () => {
 
   const sent = await deliverOrder(store, claims, deliveries, notifier, event);
   const again = await deliverOrder(store, claims, deliveries, notifier, event);
-  assert.deepEqual(sent.sort(), [first.id, second.id].sort());
-  assert.deepEqual(again, []);
+  assert.deepEqual(sent.sent.sort(), [first.id, second.id].sort());
+  assert.deepEqual(again.sent, []);
   assert.equal(seen.length, 2);
   assert.equal(await prisma.delivery.count({ where: { status: "sent" } }), 2);
 });
@@ -141,7 +141,7 @@ test("a failed send can be retried", async () => {
     /sns down/,
   );
   const sent = await deliverOrder(store, claims, deliveries, notifier, event);
-  assert.deepEqual(sent, [subscription.id]);
+  assert.deepEqual(sent.sent, [subscription.id]);
   assert.equal(attempts, 2);
 });
 
