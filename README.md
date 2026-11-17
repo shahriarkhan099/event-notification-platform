@@ -153,7 +153,7 @@ sam build --template infra/template.yaml
 sam deploy --guided
 ```
 
-`handleDelivery` takes the SQS event and a `deliver` function. The template sets `SNS_TOPIC_ARN`. Wiring that variable to `snsNotifier` is the production entrypoint. Tests cover `snsNotifier` with a fake client and `handleDelivery` with a function that throws. Nothing in the test suite calls AWS.
+`sam build` bundles `src/interfaces/lambda/entry.ts`. The exported function is `handler`. It delivers with the same `deliverOrder` path as the consumer, and it publishes with `snsNotifier` when `SNS_TOPIC_ARN` is set. The function needs `DATABASE_URL` and `REDIS_URL`. Prisma is left external to the bundle. Tests cover `snsNotifier` with a fake client and `handleDelivery` with a function that throws. They do not call AWS.
 
 ## What a failure looks like
 
