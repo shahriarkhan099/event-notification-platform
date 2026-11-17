@@ -1,3 +1,4 @@
+import { shouldDeadLetter } from "../../application/dead-letter.js";
 import { parseOrderPlaced } from "../../domain/order-event.js";
 import { partialBatchFailure } from "./failures.js";
 
@@ -12,6 +13,11 @@ export type SqsEvent = { Records?: SqsRecord[] };
 export async function handleDelivery(event: SqsEvent, deliver: (body: string) => Promise<void>) {
   const failed: string[] = [];
   for (const record of event.Records ?? []) {
+    const receiveCount = Number(record.attributes?.ApproximateReceiveCount ?? "1");
+    if (shouldDeadLetter(receiveCount)) {
+      failed.push(record.messageId);
+      continue;
+    }
     if (!parseOrderPlaced(record.body)) continue;
     try {
       await deliver(record.body);
