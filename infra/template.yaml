@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Notification delivery. Express and Redis stay outside this stack.
+
+Resources:
+  FanoutTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: notification-fanout
+
+  DeliveryDeadLetter:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: notification-delivery-dlq
+
+  DeliveryQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: notification-delivery
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeliveryDeadLetter.Arn
+        maxReceiveCount: 5
+
+  DeliveryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: notification-delivery
+      Runtime: nodejs22.x
+      Handler: src/interfaces/lambda/handler.handleDelivery
+      Timeout: 30
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref FanoutTopic
+      Policies:
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt FanoutTopic.TopicName
+      Events:
+        Delivery:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt DeliveryQueue.Arn
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
