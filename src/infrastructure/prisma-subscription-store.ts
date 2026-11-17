@@ -28,12 +28,30 @@ export class PrismaSubscriptionStore implements SubscriptionStore {
   constructor(private readonly db: PrismaClient) {}
 
   async create(input: NewSubscription): Promise<SavedSubscription> {
-    return this.db.$transaction((tx) =>
-      writeSubscriptionWithOutbox(tx, { ...input, id: randomUUID() }),
-    );
+    try {
+      return await this.db.$transaction((tx) =>
+        writeSubscriptionWithOutbox(tx, { ...input, id: randomUUID() }),
+      );
+    } catch (err) {
+      if (!isUniqueViolation(err)) throw err;
+      const existing = await this.db.subscription.findFirst({
+        where: {
+          userId: input.userId,
+          channel: input.channel,
+          address: input.address,
+          topic: input.topic,
+        },
+      });
+      if (!existing) throw err;
+      return existing;
+    }
   }
 
   findByTopic(topic: string) {
     return this.db.subscription.findMany({ where: { topic } });
   }
+}
+
+function isUniqueViolation(err: unknown) {
+  return typeof err === "object" && err !== null && "code" in err && err.code === "P2002";
 }

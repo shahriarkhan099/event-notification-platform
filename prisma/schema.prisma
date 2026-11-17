@@ -15,6 +15,7 @@ model Subscription {
   topic     String
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@unique([userId, channel, address, topic], map: "subscriptions_identity")
   @@map("subscriptions")
 }
 
