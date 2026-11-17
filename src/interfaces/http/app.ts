@@ -14,9 +14,13 @@ export function createApp(create: Create, list: List = async () => [], health: H
   app.use(express.json({ limit: "16kb" }));
   app.use(assignRequestId);
 
-  app.get("/health", async (_req, res) => {
-    const ok = await health();
-    res.status(ok ? 200 : 503).json({ ok });
+  app.get("/health", async (_req, res, next) => {
+    try {
+      const ok = await health();
+      res.status(ok ? 200 : 503).json({ ok });
+    } catch (err) {
+      next(err);
+    }
   });
 
   app.get("/subscriptions", async (req, res, next) => {
@@ -57,19 +61,33 @@ export function createApp(create: Create, list: List = async () => [], health: H
       res.status(400).json({ error: err.message });
       return;
     }
+    if (clientStatus(err) === 400) {
+      res.status(400).json({ error: "invalid json" });
+      return;
+    }
     console.error(err);
-    res.status(500).json({ error: "failed to create subscription" });
+    res.status(500).json({ error: "request failed" });
   });
 
   return app;
 }
 
 function readBody(body: unknown): NewSubscription {
-  const record = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
+  const record = recordOf(body);
   return {
     userId: typeof record.userId === "string" ? record.userId : "",
     channel: typeof record.channel === "string" ? record.channel : "",
     address: typeof record.address === "string" ? record.address : "",
     topic: typeof record.topic === "string" ? record.topic : "",
   };
+}
+
+function recordOf(body: unknown): Record<string, unknown> {
+  if (typeof body !== "object" || body === null || Array.isArray(body)) return {};
+  return body as Record<string, unknown>;
+}
+
+export function clientStatus(err: unknown) {
+  if (typeof err !== "object" || err === null || !("status" in err)) return undefined;
+  return err.status;
 }

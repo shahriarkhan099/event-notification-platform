@@ -13,6 +13,7 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     .split(",")
     .map((part) => part.trim())
     .filter(Boolean);
+  if (kafkaBrokers.length === 0) throw new Error("KAFKA_BROKERS must list at least one broker");
   const redisUrl = env.REDIS_URL ?? "redis://localhost:6379";
   const redisTtlSeconds = Number(env.REDIS_TTL_SECONDS ?? 86400);
   if (!Number.isInteger(redisTtlSeconds) || redisTtlSeconds < 1) {
