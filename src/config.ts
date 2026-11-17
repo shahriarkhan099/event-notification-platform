@@ -3,6 +3,7 @@ export type AppConfig = {
   redisUrl: string;
   port: number;
   redisTtlSeconds: number;
+  outboxBatch: number;
 };
 
 export function readConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -17,5 +18,9 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   if (!Number.isInteger(redisTtlSeconds) || redisTtlSeconds < 1) {
     throw new Error("REDIS_TTL_SECONDS must be a positive integer");
   }
-  return { kafkaBrokers, redisUrl, port, redisTtlSeconds };
+  const outboxBatch = Number(env.OUTBOX_BATCH ?? 20);
+  if (!Number.isInteger(outboxBatch) || outboxBatch < 1) {
+    throw new Error("OUTBOX_BATCH must be a positive integer");
+  }
+  return { kafkaBrokers, redisUrl, port, redisTtlSeconds, outboxBatch };
 }
