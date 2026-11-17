@@ -1,5 +1,6 @@
 import type { OrderPlaced } from "../domain/order-event.js";
 import type { ClaimStore, DeliveryLog, Notifier, SubscriptionStore } from "./ports.js";
+import type { MemoryRateLimit } from "./rate-limit.js";
 
 export async function deliverOrder(
   subscriptions: SubscriptionStore,
@@ -7,10 +8,12 @@ export async function deliverOrder(
   deliveries: DeliveryLog,
   notifier: Notifier,
   event: OrderPlaced,
+  limit?: MemoryRateLimit,
 ) {
   const matching = await subscriptions.findByTopic("order.placed");
   const sent: string[] = [];
   for (const subscription of matching) {
+    if (limit && !(await limit.take(subscription.id))) continue;
     const key = `delivery:${event.id}:${subscription.id}`;
     const cached = await claims.claim(key);
     if (!cached) continue;
