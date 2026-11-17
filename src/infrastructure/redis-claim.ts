@@ -1,8 +1,7 @@
 import { Redis } from "ioredis";
 import type { ClaimStore } from "../application/ports.js";
 
-export function redisClaimStore(url: string, ttlSeconds = 86400): ClaimStore & { quit: () => Promise<unknown> } {
-  const client = new Redis(url);
+export function redisClaimStore(url: string, ttlSeconds = 86400, client = new Redis(url, { lazyConnect: true })) : ClaimStore & { quit: () => Promise<unknown> } {
   return {
     async claim(key) {
       const result = await client.set(key, "1", "EX", ttlSeconds, "NX");

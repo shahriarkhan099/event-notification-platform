@@ -24,9 +24,16 @@ export async function deliverOrder(
     }
     const key = `delivery:${event.id}:${subscription.id}`;
     const cached = await claims.claim(key);
-    if (!cached) continue;
+    if (!cached) {
+      skipped.push(subscription.id);
+      continue;
+    }
     const owned = await deliveries.claim(event.id, subscription.id);
-    if (!owned) continue;
+    if (!owned) {
+      await claims.release(key);
+      skipped.push(subscription.id);
+      continue;
+    }
     try {
       await notifier.send(subscription, event);
       await deliveries.markSent(event.id, subscription.id);
