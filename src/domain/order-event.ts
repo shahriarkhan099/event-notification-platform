@@ -19,7 +19,7 @@ export function parseOrderPlaced(raw: string): OrderPlaced | null {
   if (typeof record.id !== "string" || !record.id) return null;
   if (typeof record.orderId !== "string" || !record.orderId) return null;
   if (typeof record.sku !== "string" || !record.sku) return null;
-  if (typeof record.qty !== "number" || !Number.isInteger(record.qty)) return null;
+  if (typeof record.qty !== "number" || !Number.isInteger(record.qty) || record.qty < 1) return null;
   return {
     id: record.id,
     type: "order.placed",
